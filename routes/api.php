@@ -28,3 +28,4 @@ Route::delete('books/{id}', [BookController::class, 'destroy']);
 Route::post('register', [ApiAuthController::class, 'register'])->name('register.api');
 
 Route::post('sign-up', [\App\Http\Controllers\UserController::class, 'register']);
+Route::post('sign-in', [\App\Http\Controllers\UserController::class, 'authenticate']);
