@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Client;
+use App\Models\StoreSetup;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -103,5 +104,46 @@ class UserController extends Controller
         $data['expired_at'] = $jwtPayload->exp;
 
         return ["rst" => "1", "msg" => "success", "data" => $data];
+    }
+
+    public function getStoreMenu(Request $request)
+    {
+        $inputs = $request->all();
+
+        $validator = Validator::make($request->all(), [
+           'store_id' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return ["rst" => "0", "msg" => $validator->errors()->toJson(), "data" => []];
+        }
+
+        try {
+            $details = StoreSetup::join('store_detail', 'store_setup.serial_no', 'store_detail.serial_no')
+                ->where('store_setup.serial_no', $inputs['store_id'])
+                ->first([
+                    DB::raw('store_detail.serial_no'),
+                    DB::raw('store_detail.store_name'),
+                    DB::raw('store_detail.store_subname'),
+                    DB::raw('store_setup.rate'),
+                    DB::raw('store_setup.location'),
+                    DB::raw("CASE WHEN store_setup.operation_status = 'A' THEN 'open' ELSE 'closed' END AS operation_status"),
+                ]);
+
+            if (empty($details)) {
+                return ["rst" => "0", "msg" => 'no_details_found', "data" => []];
+            }
+
+            if (!empty($details->location)) {
+                $details->location = json_decode($details->location);
+            }
+
+            $return = [];
+            $return['details'] = $details;
+
+            return ["rst" => "1", "msg" => "success", "data" => $return];
+        } catch (\Exception $e) {
+            return ["rst" => "1", "msg" => $e->getMessage(), "data" => []];
+        }
     }
 }

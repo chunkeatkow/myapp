@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Auth\ApiAuthController;
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\StoreController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -27,5 +29,11 @@ Route::delete('books/{id}', [BookController::class, 'destroy']);
 
 Route::post('register', [ApiAuthController::class, 'register'])->name('register.api');
 
-Route::post('sign-up', [\App\Http\Controllers\UserController::class, 'register']);
-Route::post('sign-in', [\App\Http\Controllers\UserController::class, 'authenticate']);
+Route::post('sign-up', [UserController::class, 'register']);
+Route::post('sign-in', [UserController::class, 'authenticate']);
+
+Route::group(['middleware' => ['jwt.verify']], function() {
+   Route::get('store/menu', [UserController::class, 'getStoreMenu']);
+   Route::post('store/create', [StoreController::class, 'createStore']);
+   Route::get('store/list', [StoreController::class, 'getStore']);
+});
